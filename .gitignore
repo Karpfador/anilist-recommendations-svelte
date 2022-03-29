@@ -10,3 +10,4 @@ node_modules
 .output
 /.vscode
 /yarn.lock
+/yarn-error.log
