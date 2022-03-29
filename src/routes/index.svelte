@@ -92,6 +92,7 @@
                                 checked={tags.has(tag.tag.name)}
                                 on:click={() => handleTagToggle(tag.tag.name)}
                             />
+                            <!-- svelte-ignore a11y-invalid-attribute -->
                             <a href="javascript:;">
                                 {tag.tag.name} ({tag.minutesWatched} minutes)
                             </a>
