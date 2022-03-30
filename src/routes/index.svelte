@@ -1,19 +1,17 @@
 <script lang="ts">
-    import { ApolloClient, InMemoryCache } from '@apollo/client/core'
-    import { query, setClient } from 'svelte-apollo'
+    import { graphql, query } from '$houdini'
     import debounce from 'lodash/debounce'
-    import { GET_ANIME, GET_USER, type IAnimeResult, type IUserResult } from '$lib/queries'
 
-    const client = new ApolloClient({
-        uri: 'https://graphql.anilist.co/',
-        cache: new InMemoryCache(),
-        defaultOptions: {
-            query: {
-                fetchPolicy: 'no-cache',
-            },
-        },
-    })
-    setClient(client)
+    // const client = new ApolloClient({
+    //     uri: 'https://graphql.anilist.co/',
+    //     cache: new InMemoryCache(),
+    //     defaultOptions: {
+    //         query: {
+    //             fetchPolicy: 'no-cache',
+    //         },
+    //     },
+    // })
+    // setClient(client)
 
     // Initial Value because svelte-apollo doesn't support lazy queries...
     let username: string = undefined
@@ -24,20 +22,20 @@
         if (username) {
             // Checking, to prevent empty searches, which just result in a 404. Even
             // entering valid usernames stops everything from working.
-            user.refetch({ username })
+            // user.refetch({ username })
         }
 
         tags.clear()
         tags = tags
     }, 1000)
 
-    const user = query<IUserResult>(GET_USER, { variables: { username: username ?? 'karpfador' } })
+    // const user = query<IUserResult>(GET_USER, { variables: { username: username ?? 'karpfador' } })
 
     let tags: Set<string> = new Set()
 
     const refetchAnime = debounce(() => {
         if (tags.size > 0) {
-            anime.refetch({ tags: Array.from(tags) })
+            // anime.refetch({ tags: Array.from(tags) })
         }
     }, 1000)
 
@@ -55,9 +53,29 @@
     }
 
     // Initializing with a fixed value again to avoid issues thanks to lack of lazy query support
-    const anime = query<IAnimeResult>(GET_ANIME, {
-        variables: { tags: ['Shounen'] },
-    })
+    // const anime = query<IAnimeResult>(GET_ANIME, {
+    //     variables: { tags: ['Shounen'] },
+    // })
+
+    const { data } = query(graphql`
+        query FixedUserTest {
+            User(name: "Karpfador") {
+                id
+                name
+                statistics {
+                    anime {
+                        tags(sort: PROGRESS_DESC) {
+                            minutesWatched
+                            tag {
+                                name
+                                id
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    `)
 </script>
 
 <svelte:head>
@@ -65,6 +83,7 @@
 </svelte:head>
 
 <section>
+    <h1>{JSON.stringify($data)}</h1>
     <h1>First Test: Recommending based on a tag (currently not respecting already watched etc.)</h1>
     <p>Warning: There is no filter on adult content yet</p>
     <p>
@@ -77,7 +96,7 @@
 
     <div>
         {#if username}
-            {#if $user.loading}
+            <!-- {#if $user.loading}
                 Loading User...
             {:else if $user.error}
                 Error: {$user.error.message}
@@ -91,21 +110,21 @@
                                 type="checkbox"
                                 checked={tags.has(tag.tag.name)}
                                 on:click={() => handleTagToggle(tag.tag.name)}
-                            />
-                            <!-- svelte-ignore a11y-invalid-attribute -->
-                            <a href="javascript:;">
+                            /> -->
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <!-- <a href="javascript:;">
                                 {tag.tag.name} ({tag.minutesWatched} minutes)
                             </a>
                         </li>
                     {/each}
                 </ul>
-            {/if}
+            {/if} -->
         {/if}
     </div>
 
     <div>
         {#if tags.size > 0}
-            {#if $anime.loading}
+            <!-- {#if $anime.loading}
                 Loading Anime...
             {:else if $anime.error}
                 Error: {$user.error.message}
@@ -129,7 +148,7 @@
                 {/if}
             {:else}
                 No anime found.
-            {/if}
+            {/if} -->
         {/if}
     </div>
 </section>

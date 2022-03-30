@@ -1,7 +1,7 @@
-import { gql } from '@apollo/client/core'
+import { graphql } from '$houdini'
 
-export const GET_USER = gql`
-    query ($username: String!) {
+export const GET_USER = graphql`
+    query User($username: String!) {
         User(name: $username) {
             id
             name
@@ -36,8 +36,8 @@ export interface IUserResult {
     }
 }
 
-export const GET_ANIME = gql`
-    query ($tags: [String!]!) {
+export const GET_ANIME = graphql`
+    query Anime($tags: [String!]!) {
         Page(perPage: 20, page: 1) {
             media(tag_in: $tags, type: ANIME, sort: SCORE_DESC) {
                 id

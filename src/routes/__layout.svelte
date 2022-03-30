@@ -1,3 +1,10 @@
+<script context="module">
+    import env from '../environment'
+    import { setEnvironment } from '$houdini'
+
+    setEnvironment(env)
+</script>
+
 <script lang="ts">
     import Header from '$lib/header/Header.svelte'
     import '../app.css'
