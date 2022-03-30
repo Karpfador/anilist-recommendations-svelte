@@ -1,33 +1,55 @@
 <script lang="ts">
-    import { graphql, query } from '$houdini'
+    import { graphql, query, type GetUser$input } from '$houdini'
     import debounce from 'lodash/debounce'
 
-    // const client = new ApolloClient({
-    //     uri: 'https://graphql.anilist.co/',
-    //     cache: new InMemoryCache(),
-    //     defaultOptions: {
-    //         query: {
-    //             fetchPolicy: 'no-cache',
-    //         },
-    //     },
-    // })
-    // setClient(client)
-
-    // Initial Value because svelte-apollo doesn't support lazy queries...
-    let username: string = undefined
+    let username: string = ''
 
     const handleUsernameInput = debounce(e => {
         username = e.target.value
 
         if (username) {
-            // Checking, to prevent empty searches, which just result in a 404. Even
-            // entering valid usernames stops everything from working.
-            // user.refetch({ username })
+            userRefetch({ username })
         }
 
         tags.clear()
         tags = tags
     }, 1000)
+
+    const {
+        data: user,
+        error: userError,
+        loading: userLoading,
+        refetch: userRefetch,
+    } = query(graphql`
+        query GetUser($username: String!) {
+            User(name: $username) {
+                id
+                name
+                statistics {
+                    anime {
+                        tags(sort: PROGRESS_DESC) {
+                            minutesWatched
+                            tag {
+                                name
+                                id
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    `)
+
+    export function GetUserVariables(page): GetUser$input {
+        // make sure we recognize the value
+        if (!['active', 'completed'].includes(page.params.filter)) {
+            return this.error(400, 'invalid filter')
+        }
+
+        return {
+            username,
+        }
+    }
 
     // const user = query<IUserResult>(GET_USER, { variables: { username: username ?? 'karpfador' } })
 
@@ -56,26 +78,6 @@
     // const anime = query<IAnimeResult>(GET_ANIME, {
     //     variables: { tags: ['Shounen'] },
     // })
-
-    const { data } = query(graphql`
-        query FixedUserTest {
-            User(name: "Karpfador") {
-                id
-                name
-                statistics {
-                    anime {
-                        tags(sort: PROGRESS_DESC) {
-                            minutesWatched
-                            tag {
-                                name
-                                id
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    `)
 </script>
 
 <svelte:head>
@@ -83,7 +85,6 @@
 </svelte:head>
 
 <section>
-    <h1>{JSON.stringify($data)}</h1>
     <h1>First Test: Recommending based on a tag (currently not respecting already watched etc.)</h1>
     <p>Warning: There is no filter on adult content yet</p>
     <p>
@@ -96,11 +97,11 @@
 
     <div>
         {#if username}
-            <!-- {#if $user.loading}
+            {#if $userLoading}
                 Loading User...
-            {:else if $user.error}
+            {:else if $userError}
                 Error: {$user.error.message}
-            {:else if $user.data}
+            {:else if $user}
                 Found user <b>{$user.data.User.name}</b> with ID {$user.data.User.id}<br />
                 Your tags sorted by minutes watched:
                 <ul>
@@ -110,15 +111,16 @@
                                 type="checkbox"
                                 checked={tags.has(tag.tag.name)}
                                 on:click={() => handleTagToggle(tag.tag.name)}
-                            /> -->
-            <!-- svelte-ignore a11y-invalid-attribute -->
-            <!-- <a href="javascript:;">
+                            />
+                            -->
+                            <!-- svelte-ignore a11y-invalid-attribute -->
+                            <a href="javascript:;">
                                 {tag.tag.name} ({tag.minutesWatched} minutes)
                             </a>
                         </li>
                     {/each}
                 </ul>
-            {/if} -->
+            {/if}
         {/if}
     </div>
 
